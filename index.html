@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Malla Medicina Veterinaria</title>
+
+<style>
+:root{
+  --bg:#EBE0FF;
+  --card:#ffffff;
+  --primary:#916DD5;
+  --secondary:#C7ADFF;
+  --text:#3F3649;
+
+  --ok:#7151A9;
+  --cur:#DAC7FF;
+  --fail:#2B1F33;
+  --lock:#d6d0e3;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  background:var(--bg);
+  font-family:"Segoe UI", system-ui, sans-serif;
+  color:var(--text);
+}
+
+h1{
+  text-align:center;
+  padding:20px 10px;
+  color:var(--primary);
+}
+
+/* ====== MALLA ====== */
+.malla{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:20px;
+  padding:20px;
+}
+
+.semestre{
+  background:var(--card);
+  border-radius:18px;
+  padding:15px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+.semestre h2{
+  text-align:center;
+  color:var(--primary);
+  margin-bottom:12px;
+}
+
+/* ====== RAMOS ====== */
+.ramo{
+  padding:10px;
+  margin:6px 0;
+  border-radius:12px;
+  background:#f5f3fb;
+  cursor:pointer;
+  font-weight:600;
+  transition:.2s;
+}
+
+.ramo:hover{ transform:scale(1.02); }
+
+.aprobado{ background:var(--ok); color:white; }
+.cursando{ background:var(--cur); }
+.reprobado{ background:var(--fail); color:white; }
+.bloqueado{
+  background:var(--lock);
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+/* ====== MODAL ====== */
+#modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+}
+
+#modalBox{
+  background:white;
+  width:320px;
+  max-width:90%;
+  margin:20% auto;
+  padding:20px;
+  border-radius:18px;
+  text-align:center;
+}
+
+#modalBox h3{ color:var(--primary); }
+
+button{
+  width:100%;
+  margin:6px 0;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  background:var(--secondary);
+}
+button:hover{ background:var(--primary); color:white; }
+
+/* ====== CELULAR ====== */
+@media (max-width:768px){
+  h1{ font-size:1.4rem; }
+  .malla{ padding:12px; }
+  .ramo{ font-size:.9rem; }
+}
+</style>
+</head>
+
+<body>
+
+<h1>Malla Curricular Medicina Veterinaria</h1>
+
+<div class="malla" id="malla"></div>
+
+<!-- MODAL -->
+<div id="modal">
+  <div id="modalBox">
+    <h3 id="titulo"></h3>
+    <button onclick="estado('aprobado')">Aprobado</button>
+    <button onclick="estado('cursando')">Cursando</button>
+    <button onclick="estado('reprobado')">Reprobado</button>
+    <button onclick="estado('')">No cursado</button>
+    <button onclick="cerrar()">Cerrar</button>
+  </div>
+</div>
+
+<script>
+const data={
+1:[
+["S1R1","Introducción a la Medicina Veterinaria"],
+["S1R2","Biología Celular"],
+["S1R3","Antropología"],
+["S1R4","Conservación de la Vida Silvestre"],
+["S1R5","Zoología Veterinaria"],
+["S1R6","Química General y Orgánica"]
+],
+2:[
+["S2R1","Embrio-Histología","S1R2"],
+["S2R2","Bioquímica Veterinaria","S1R2,S1R6"],
+["S2R3","Ética","S1R3"],
+["S2R4","Anatomía Veterinaria"],
+["S2R5","Física Médica"],
+["S2R6","Bienestar del Planeta"]
+],
+3:[
+["S3R1","Inmunología Veterinaria"],
+["S3R2","Fisiología Veterinaria","S2R2"],
+["S3R3","Microbiología y Virología","S2R2"],
+["S3R4","Reproducción y Mejoramiento Genético","S2R2,S2R4"],
+["S3R5","Gestión Personal"],
+["S3R6","Anatomía Comparada","S2R4"]
+],
+4:[
+["S4R1","Fisiopatología Veterinaria"],
+["S4R2","Enfermedades Infecciosas","S3R3"],
+["S4R3","Enfermedades Parasitarias"],
+["S4R4","Gineco-Obstetricia","S3R4"],
+["S4R5","Ecología y Territorio"],
+["S4R6","Hito Evaluativo Integrativo","","2,3"]
+],
+5:[
+["S5R1","Patología General","S4R1"],
+["S5R2","Farmacología","S4R1"],
+["S5R3","Nutrición Animal"],
+["S5R4","Metodología de la Investigación"],
+["S5R5","Emprendimiento"],
+["S5R6","Persona y Sociedad","S2R3"]
+],
+6:[
+["S6R1","Patología Especial","S5R1"],
+["S6R2","Exploración Clínica"],
+["S6R3","Bienestar Animal"],
+["S6R4","Práctica Inicial","","4,5"],
+["S6R5","Patología Clínica","S4R1"],
+["S6R6","Electivo I"]
+],
+7:[
+["S7R1","Ganadería de Rumiantes","S5R3"],
+["S7R2","Producción Monogástricos","S5R3"],
+["S7R3","Acuicultura","S5R3"],
+["S7R4","Cirugía General","S6R1"],
+["S7R5","Medicina Interna","S6R2"],
+["S7R6","Electivo II"]
+],
+8:[
+["S8R1","Diagnóstico por Imágenes","S6R2"],
+["S8R2","Ciencia de Datos"],
+["S8R3","Cirugía Especial","S7R4"],
+["S8R4","Salud Pública"],
+["S8R5","Práctica Intermedia","S6R4"],
+["S8R6","Hito Integrativo Interprofesional","","6,7"]
+],
+9:[
+["S9R1","Clínica Animales Mayores","S7R5"],
+["S9R2","Clínica Animales Menores","S7R5"],
+["S9R3","Inocuidad Alimentaria","S8R4"],
+["S9R4","Clínica Silvestres","S7R5"],
+["S9R5","Electivo III"],
+["S9R6","Internado Integrador","S7R5"]
+]
+};
+
+const malla=document.getElementById("malla");
+
+Object.entries(data).forEach(([s,r])=>{
+  malla.innerHTML+=`
+  <div class="semestre">
+    <h2>Semestre ${s}</h2>
+    ${r.map(x=>`
+      <div class="ramo ${x[2]||x[3]?'bloqueado':''}"
+        data-codigo="${x[0]}"
+        ${x[2]?`data-prereq="${x[2]}"`:''}
+        ${x[3]?`data-semestres="${x[3]}"`:''}>
+        ${x[1]}
+      </div>`).join("")}
+  </div>`;
+});
+
+let actual=null;
+document.querySelectorAll(".ramo").forEach(r=>{
+  r.onclick=()=>{
+    if(r.classList.contains("bloqueado"))return;
+    actual=r; titulo.innerText=r.innerText; modal.style.display="block";
+  }
+});
+
+function estado(e){ actual.className="ramo "+e; cerrar(); actualizar(); }
+function cerrar(){ modal.style.display="none"; }
+
+function actualizar(){
+  document.querySelectorAll("[data-prereq]").forEach(r=>{
+    let ok=r.dataset.prereq.split(",")
+      .every(c=>document.querySelector(`[data-codigo="${c}"]`)?.classList.contains("aprobado"));
+    r.classList.toggle("bloqueado",!ok);
+  });
+
+  document.querySelectorAll("[data-semestres]").forEach(r=>{
+    let ok=true;
+    r.dataset.semestres.split(",").forEach(s=>{
+      document.querySelectorAll(`[data-codigo^="S${s}"]`)
+        .forEach(x=>{ if(!x.classList.contains("aprobado")) ok=false; });
+    });
+    r.classList.toggle("bloqueado",!ok);
+  });
+}
+actualizar();
+</script>
+
+</body>
+</html>
